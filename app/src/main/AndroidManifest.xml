@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="ca.ubc.ece.lqiu.androidframework">
+
+    <uses-sdk
+        android:minSdkVersion="16"
+        android:targetSdkVersion="22"/>
+
+    <!--
+        Requests a permission that the application must be granted in order for it to operate correctly. Permissions are granted by the user when the application is installed or while the app is running.
+    -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <!--
+        android:allowBackup Whether to allow the application to participate in the backup and restore infrastructure.
+        android:theme A reference to a style resource defining an overall theme for the activity. This automatically sets the activity's context to use this theme prior to the activity being launched.
+    -->
+    <!-- Lina changed android:theme here. Previously is a customTheme defined by Ahmed. -->
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+
+        <!--
+            An Activity represents a single screen in an app. You can start a new instance of an Activity by passing an Intent to startActivity(). The Intent describes the activity to start and carries any necessary data.
+        -->
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name" >
+            <!-- This activity is the main entry, should appear in app launcher -->
+            <!--
+                An intent filter is an expression in an app's manifest file that specifies the type of intents that the component would like to receive. e.g. By declaring an intent filter for an activity, one can make it possible for other apps to directlt start your activity with a certain kind of intent. Likewise, if you do not declare any intent filters for an activity, then it can be started only with an explicit intent.
+            -->
+            <!--
+                An Intent object carries information that the Android system uses to determine which component to start (such as the exact component name or component category that should receive the intent), plus informtion that the recipient component uses in order to properly perform the action (such as the action to take and the data to act upon).
+
+                Primary info. contained in an Intent: ComponentName, Action (A string that specifies the generic action to perform, like view and pick), Data (The URI that references the data to be acted on and the MIME type of that data.), Category (A string containing additional information about the kind of component that should handle the intent.), Extras (key-value pairs: carry additional information required to accomplish the requested action.), Flags (function as metadata for the intent. The flags may instruct the Android system how to launch an activity and how to treat it after it's launched.)
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <!-- CATEGORY_LAUNCHER: The activity is the initial activity of a task and is listed in the system's application launcher. -->
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            A Service is a component that performs operations in the background without a user interface. You can start a service to perform a one-time operation (such as download a file) by passing an Intent to startService(). The Intent describes the service to start and carries any necessary data.
+
+            When starting a Service, you should always specify the component name.
+        -->
+        <service android:name="ca.ubc.ece.lqiu.androidframework.observeScreenStatusService" >
+        </service>
+
+        <receiver android:name="ca.ubc.ece.lqiu.androidframework.ScreenReceiver" >
+        </receiver>
+
+        <!--
+            DeviceAdminReceiver: Base class for implementing a device administration component.This class provides a convenience for interpreting the raw intent actions that are sent by the system.
+            When publishing your DeviceAdmin subclass as a receiver, it must handle ACTION_DEVICE_ADMIN_ENABLED and require the BIND_DEVICE_ADMIN permission.-->
+
+        <receiver
+            android:name="ca.ubc.ece.lqiu.androidframework.DeviceAdminAndroidReceiver"
+            android:permission="android.permission.BIND_DEVICE_ADMIN" >
+            <!-- android:resource="@xml/device_admin_sample" -->
+            <meta-data
+                android:name="android.app.device_admin"/>
+
+            <intent-filter>
+                <!-- Action sent to a device administrator when the user has failed at attempting to enter the password. -->
+                <action android:name="android.app.action.ACTION_PASSWORD_FAILED" />
+                <!-- Action sent to a device administrator when the user has successfully entered their password, after failing one or more times. -->
+                <action android:name="android.app.action.ACTION_PASSWORD_SUCCEEDED" />
+                <!-- This is the primary action that a device administrator must implement to be allowed to manage a device. -->
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <!-- Action sent to a device administrator when the user has disabled it. -->
+                <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+            Declares a broadcast receiver (a BroadcastReceiver subclass) as one of the application's components. Broadcast receivers enable applications to receive intents that are broadcast by the system or by other applications, even when other components of the application are not running.
+        -->
+        <!--
+            android:enabled Whether or not the broadcast receiver can be instantiated by the system -"true" if it can be, and "false" if not.
+            android:exported Whether or not the broadcast receiver can receive messages from sources outside its application -"true" if it can be, and "false" if not.
+
+            DO NOT UNDERSTAND
+            android:permission The name of a permission that broadcasters must have to send a message to the broadcast receiver. If this attribute is not set, the permission set by the <application> elements.
+        -->
+        <receiver
+            android:name="ca.ubc.ece.lqiu.androidframework.ConnectivityReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="android.permission.ACCESS_WIFI_STATE" >
+            <intent-filter>
+                <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
+                <action android:name="android.nfc.action.ADAPTER_STATE_CHANGED" />
+                <action android:name="android.location.PROVIDERS_CHANGED" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name="ca.ubc.ece.lqiu.androidframework.SampleAlarmReceiver" >
+        </receiver>
+        <receiver
+            android:name="ca.ubc.ece.lqiu.androidframework.SampleBootReceiver"
+            android:enabled="false" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" >
+                </action>
+            </intent-filter>
+        </receiver>
+
+        <service android:name="ca.ubc.ece.lqiu.androidframework.SampleSchedulingService" />
+
+        <activity
+            android:name=".fillDemographicsActivity"
+            android:label="@string/title_activity_demographics" >
+        </activity>
+    </application>
+
+</manifest>

@@ -1,0 +1,47 @@
+<resources>
+    <!--Define some necessary strings here.-->
+    <string name="app_name">Usage Pattern Study</string>
+    <string name="action_settings">Settings</string>
+    <string name="deviceAdminHint">Please activate "device administrator" for this app (Settings/Security/Device Administrators)</string>
+    <string name="upload">Upload</string>
+    <string name="agree">Agree</string>
+    <string name="decline">Decline</string>
+    <string name="major_hint">What is your Job/Occupation?</string>
+    <string name="submit">Submit</string>
+    <string name="Continue">Continue</string>
+    <string name="device_admin_label">Please enable device administrator</string>
+    <string name="progress_label">Thanks for sharing your data</string>
+    <string name="progressTitle">Dear participant, you will be able to keep track the progress of the study period from the progress bar:</string>
+    <string name="consent">Thanks for your interest in Android study application, we will ask you to answer a short survey about demographics.</string>
+    <string name="demographicDesc">Please answer the following questions and then submit your answer to start the study. You will be forwarded to the progress screen to keep track of study progress. All fields are required</string>
+    <string name="email">What is your email address?</string>
+    <string name="age">What is your age?(>=19-year-old)</string>
+    <string name="gender">What is your gender?</string>
+    <string name="education">What is your education level?</string>
+    <string name="withdrawal">Withdrawal from this study</string>
+    <string name="emailHint">Email will be collected for rewarding purpose only</string>
+    <string name="exitHint">Do you want to exit?</string>
+    <string name="withdrewHint">Do you want to withdraw from this study? (Note: If you withdrew from this study, you will not be eligible for the raffle (ipad air 2 64G))</string>
+    <string name="appClosingDialogTitle">Confirmation</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="validatorMessage">Please enter missing fields, all fields are required</string>
+
+    <string-array name="gender_array">
+        <item></item>
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+    <string-array name="education_array">
+        <item></item>
+        <item>Less than High School</item>
+        <item>High School</item>
+        <item>University (Bachelor’s)</item>
+        <item>Graduate School (Master or PhD)</item>
+        <item>Professional School</item>
+    </string-array>
+
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_activity_demographics">Demographics</string>
+
+</resources>
