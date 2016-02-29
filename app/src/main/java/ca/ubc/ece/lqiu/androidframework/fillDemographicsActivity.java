@@ -209,7 +209,7 @@ public class fillDemographicsActivity extends Activity{
             }
 
             // load public key from assets; the key will be used to encrypt the logged data,
-            // in order to upload all data secretlt to the server.
+            // in order to upload all data secretly to the server.
             try {
                 InputStream pubKeyInputStream = getAssets().open("rsa.pub");
                 OutputStream pubKeyOutputStream = new FileOutputStream(

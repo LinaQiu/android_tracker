@@ -73,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
             alarm = new SampleAlarmReceiver();
             alarm.setAlarm(this);
 
-            // launch android service, using observeScreenStatusService to replace Ahmed's AudroidService
+            // launch android service, using observeScreenStatusService to replace Ahmed's AndroidService
             Intent startBroadcastIntent = new Intent(this, observeScreenStatusService.class);
             startService(startBroadcastIntent);
         }

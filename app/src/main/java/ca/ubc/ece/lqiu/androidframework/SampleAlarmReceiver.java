@@ -33,7 +33,7 @@ public class SampleAlarmReceiver extends WakefulBroadcastReceiver{
     // Alarms (based on the AlarmManager class) give you a way to perform time-based operations
     // outside the lifetime of your application.
     /**
-     * Sets a repeating alarm that runs once a day at approximately 8:30 a.m.
+     * Sets a repeating alarm that runs once a day at approximately 12:15 a.m.
      * When the alarm fires, the app broadcasts an Intent to this
      * WakefulBroadcastReceiver.
      *
@@ -49,7 +49,7 @@ public class SampleAlarmReceiver extends WakefulBroadcastReceiver{
         Calendar calendar = Calendar.getInstance();
         // Sets the time of this calendar to the given Unix time
         calendar.setTimeInMillis(System.currentTimeMillis());
-        // Set the alarm's trigger time to 12:01 a.m.
+        // Set the alarm's trigger time to 12:15 a.m.
         calendar.set(Calendar.HOUR_OF_DAY, 00);
         calendar.set(Calendar.MINUTE, 15);
 

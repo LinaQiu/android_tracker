@@ -41,7 +41,7 @@ public class ConnectivityReceiver extends BroadcastReceiver {
 
         String action = intent.getAction();
         int state = -1;
-        String timeStamp = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSS a", Locale.US)
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd 'T' hh:mm:ss.SSS a", Locale.US)
                 .format(Calendar.getInstance().getTime());
 
         // WIFI_STATE_CHANGED_ACTION: Broadcast intent action indictaing that Wi-Fi has been

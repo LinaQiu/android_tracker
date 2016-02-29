@@ -48,7 +48,7 @@ public class Uploader {
             urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-            // Construct a urlParameters
+            // TODO(Lina): write a function to replace this part.
             String urlParameters = "txtUserId="+ URLEncoder.encode(id, "UTF-8")+"&txtAuth="+URLEncoder.encode(auth,"UTF-8")+
                     "&txtSess="+URLEncoder.encode(sess,"UTF-8")+"&txtFileName="+URLEncoder.encode(fileName,"UTF-8");
 

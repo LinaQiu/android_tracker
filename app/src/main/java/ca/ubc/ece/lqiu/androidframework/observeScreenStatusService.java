@@ -111,8 +111,7 @@ public class observeScreenStatusService extends Service{
             // attempts, screenOn, screenOff, userPresent.
             // auth_attempt intent
             if (intent.getStringExtra("passFailed") != null) {
-                // get record of data (outcome, time stamp, authentication
-                // method)
+                // get record of data (outcome, time stamp, authentication method)
                 String passFailed = intent.getStringExtra("passFailed");
 
                 // update and logging data
@@ -151,13 +150,7 @@ public class observeScreenStatusService extends Service{
                             "yyyy-MM-dd 'T' hh:mm:ss.SSS a", Locale.US).format(Calendar
                             .getInstance().getTime()));
 
-                    try {
-////////////////////////////////////////////////////////////////////////////////////////
-                        //??????Why sleep for 1000ms?????
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+
                     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
                         locked = ((KeyguardManager)getSystemService(KEYGUARD_SERVICE)).isKeyguardLocked()? "true" : "false";
                     }
@@ -279,16 +272,26 @@ public class observeScreenStatusService extends Service{
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    //TODO(Lina): try to merge getForegroundAppName() and getForegroundAppInfo() into one function, by returning the App Name and Info in one time.
     // Get currently running foreground app name
     private String getForegroundAppName() {
         String appName = "";
         ActivityManager taskManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 
+        // TODO(Lina): to replace this deprecated function getRunningTasks() with a similar one to accomplish this function.
+        // Issues met:
+        // Someone suggested to use getAppRunningProcess(), but this no longer work with Update 5.1.1. The method will only return your own package processes.
+        // Someone suggested to use UsageStatsManager, but it will need user authorization to request the stats. It is documented that there may not be a system
+        // activity to handle the Settings.ACTION_USAGE_ACCESS_SETTINGS intent. Samsung and LG are among the manufacturers who have removed this activity from their
+        // Lollipop builds, so this solution will never work on their devices.
+        // Another solution: Use an AccessibilityService. to be discussed.
         // getRunningTasks(int maxNum): return a list of the tasks that are currently running,
         // with the most recent being first and older ones after in order.
         // maxNum: the maximum number of entries to return in the list.
         RunningTaskInfo foreGroundTaskInfo = taskManager.getRunningTasks(1)
                 .get(0);
+
+
         // topActivity: the activity component at the top of the history stack of the task.
         String packageName = foreGroundTaskInfo.topActivity.getPackageName();
         PackageManager pManager = getApplicationContext().getPackageManager();
