@@ -48,9 +48,8 @@ public class Uploader {
             urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-            // TODO(Lina): write a function to replace this part.
-            String urlParameters = "txtUserId="+ URLEncoder.encode(id, "UTF-8")+"&txtAuth="+URLEncoder.encode(auth,"UTF-8")+
-                    "&txtSess="+URLEncoder.encode(sess,"UTF-8")+"&txtFileName="+URLEncoder.encode(fileName,"UTF-8");
+            // Call function urlParametersConstructor() to create an urlParameters;
+            String urlParameters = urlParametersConstructor(id,auth,sess,fileName);
 
             urlConnection.setRequestProperty("Content-Length", "" + Integer.toString(urlParameters.getBytes().length));
             urlConnection.setRequestProperty("Content-Language", "en-US");
@@ -84,6 +83,20 @@ public class Uploader {
         ////??? Not sure whether need to check the response is NULL or not, what Ahmed has done. If yes, do not know how to?////
         // HTTP_OK --> 200
         return statusCode == 200;
+    }
+
+    // This function is used for constructing an urlParameters from several strings (id, auth, sess, fileName).
+    public String urlParametersConstructor(String id, String auth, String sess, String fileName){
+        String urlParameters = "";
+        try{
+            urlParameters = "txtUserId=" + URLEncoder.encode(id, "UTF-8");
+            urlParameters = urlParameters + "&txtAuth="+URLEncoder.encode(auth,"UTF-8");
+            urlParameters = urlParameters + "&txtSess="+URLEncoder.encode(sess,"UTF-8");
+            urlParameters = urlParameters + "&txtFileName="+URLEncoder.encode(fileName,"UTF-8");
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+     return urlParameters;
     }
 
     public String encode(String data) {

@@ -51,10 +51,9 @@ public class UploadFilesTask extends AsyncTask<String, Void, Void> {
         UPLOADED_DIRECTORY = Environment.getExternalStorageDirectory() + "/usage_pattern_study";
 
         // Detect files for uploading
-        prepareFilesToUpload();
+        boolean isFilePrepared = uploader.prepareFilesToUpload(aContext);
 
-        while (!AUTHENTICATION_ATTEMPTS_FILE.isEmpty()
-                && !USER_SESSIONS_FILE.isEmpty()) {
+        while (isFilePrepared) {
 
             // Encrypt files before uploading
             String authData = encrypt(APPLICATION_DIRECTORY_PATH
@@ -80,44 +79,10 @@ public class UploadFilesTask extends AsyncTask<String, Void, Void> {
             } else {
                 return null;
             }
-            prepareFilesToUpload();
+            isFilePrepared = uploader.prepareFilesToUpload(aContext);
         }
 
         return null;
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////
-    // ???Why overloaded the method prepareFilesToUpload(Context context) in Uploader.java???
-    void prepareFilesToUpload() {
-
-        AUTHENTICATION_ATTEMPTS_FILE = "";
-        USER_SESSIONS_FILE = "";
-
-        // Prepare file name according to current date
-        String currentDay = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Calendar
-                .getInstance().getTime());
-
-        String currentAuthFile = "auth-" + currentDay + ".txt";
-        String currentSessFile = "session-" + currentDay + ".txt";
-
-        // there is no "/" in fileList returned by list() function
-        String[] fileList = (new File(APPLICATION_DIRECTORY_PATH)).list();
-
-        for (String fileName : fileList) {
-            // fileName.equals(currentAuthFile): to upload previous day data???
-            // After upload previous day data, the file will be moved to UPLOADED_DIRECTORY, so
-            // there will be no files under APPLICATION_DIRECTORY_PATH, thus it is important to
-            // check fileName.indexOf("auth")!=-1, to make sure there are files under the directory.
-            if (!fileName.equals(currentAuthFile)
-                    && fileName.indexOf("auth") != -1) {
-                AUTHENTICATION_ATTEMPTS_FILE = "/" + fileName;
-            }
-
-            if (!fileName.equals(currentSessFile)
-                    && fileName.indexOf("session") != -1) {
-                USER_SESSIONS_FILE = "/" + fileName;
-            }
-        }
     }
 
     void moveFile(String fileName, String from, String to) {
