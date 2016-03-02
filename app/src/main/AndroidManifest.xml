@@ -5,7 +5,7 @@
 
     <uses-sdk
         android:minSdkVersion="16"
-        android:targetSdkVersion="22"/>
+        android:targetSdkVersion="23"/>
 
     <!--
         Requests a permission that the application must be granted in order for it to operate correctly. Permissions are granted by the user when the application is installed or while the app is running.
