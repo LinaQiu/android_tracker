@@ -11,18 +11,20 @@ import java.util.Locale;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.app.Service;
-import android.app.ActivityManager.RunningTaskInfo;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.Settings;
+
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.List;
 
 /**
  * Created by lina on 16-02-21.
@@ -50,8 +52,7 @@ public class observeScreenStatusService extends Service{
     String foregroundRunningApps = "";
     // appName stores currently/previously running foreground app name
     String appName = "";
-    // appInfo stores currently/previously running foreground app info.
-    String appInfo = "";
+
     String locked = "NA";
     private Authentication_Model _auth_model;
 
@@ -181,9 +182,12 @@ public class observeScreenStatusService extends Service{
                             "Session start,," + session_start_time + ","
                                     + getAuthenticationMethodType() + "\n");
 
+                    // To direct the user to the settings page, in order to get user authorization to request the stats.
+                    Intent usageAccessSettingsIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                    startActivity(usageAccessSettingsIntent);
+
                     // start foreground application observer thread
                     appName = "";
-                    appInfo = "";
                     foregroundRunningApps = "";
                     mCheckForegroundRunnable.run();
                 }
@@ -272,12 +276,8 @@ public class observeScreenStatusService extends Service{
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    //TODO(Lina): try to merge getForegroundAppName() and getForegroundAppInfo() into one function, by returning the App Name and Info in one time.
     // Get currently running foreground app name
     private String getForegroundAppName() {
-        String appName = "";
-        ActivityManager taskManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-
         // TODO(Lina): to replace this deprecated function getRunningTasks() with a similar one to accomplish this function.
         // Issues met:
         // Someone suggested to use getAppRunningProcess(), but this no longer work with Update 5.1.1. The method will only return your own package processes.
@@ -288,42 +288,31 @@ public class observeScreenStatusService extends Service{
         // getRunningTasks(int maxNum): return a list of the tasks that are currently running,
         // with the most recent being first and older ones after in order.
         // maxNum: the maximum number of entries to return in the list.
-        RunningTaskInfo foreGroundTaskInfo = taskManager.getRunningTasks(1)
-                .get(0);
-
-
-        // topActivity: the activity component at the top of the history stack of the task.
-        String packageName = foreGroundTaskInfo.topActivity.getPackageName();
-        PackageManager pManager = getApplicationContext().getPackageManager();
-        try {
-            //getApplicationInfo(): return the full application info for this context's package
-            appName = (String) pManager.getApplicationLabel(pManager
-                    .getApplicationInfo(packageName, 0));
-        } catch (NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        return appName;
-    }
-
-    // Get currently running foreground app info., including its name.
-    // ???Why need two almost similar function: getForegroundAppName() and getForegroundAppInfo()
-    private String getForegroundAppInfo() {
         String appName = "";
-        ActivityManager taskManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        ApplicationInfo appInfoString = null;
 
-        RunningTaskInfo foreGroundTaskInfo = taskManager.getRunningTasks(1)
-                .get(0);
-        String packageName = foreGroundTaskInfo.topActivity.getPackageName();
-        PackageManager pManager = getApplicationContext().getPackageManager();
-        try {
-            appName = (String) pManager.getApplicationLabel(pManager
-                    .getApplicationInfo(packageName, 0));
-            appInfoString = pManager.getApplicationInfo(packageName, 0);
-        } catch (NameNotFoundException e) {
-            e.printStackTrace();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            UsageStatsManager usm = (UsageStatsManager) getSystemService("usagestats");
+            long time = System.currentTimeMillis();
+            List<UsageStats> appList = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY,
+                    time - 1000 * 1000, time);
+            if (appList != null && appList.size() > 0) {
+                SortedMap<Long, UsageStats> mySortedMap = new TreeMap<Long, UsageStats>();
+                for (UsageStats usageStats : appList) {
+                    mySortedMap.put(usageStats.getLastTimeUsed(),
+                            usageStats);
+                }
+                if (mySortedMap != null && !mySortedMap.isEmpty()) {
+                    appName = mySortedMap.get(
+                            mySortedMap.lastKey()).getPackageName();
+                }
+            }
+        } else {
+            ActivityManager taskManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+            List<ActivityManager.RunningAppProcessInfo> tasks = taskManager.getRunningAppProcesses();
+            appName = tasks.get(0).processName;
         }
-        return appInfoString.packageName + ":" + appName;
+
+        return appName;
     }
 
     /*
@@ -347,15 +336,15 @@ public class observeScreenStatusService extends Service{
                         .getInstance().getTime());
                 if (appName != "") {
                     foregroundRunningApps += "Application background,"
-                            + appInfo + "," + appEndTimeStamp + "\n";
+                            + appName + "," + appEndTimeStamp + "\n";
                 }
                 // Change appName to currently running application
                 appName = getForegroundAppName();
-                appInfo = getForegroundAppInfo();
+
                 appStartTimeStamp = new SimpleDateFormat(
                         "yyyy-MM-dd 'T' hh:mm:ss.SSS a", Locale.US).format(Calendar
                         .getInstance().getTime());
-                foregroundRunningApps += "Application foreground," + appInfo
+                foregroundRunningApps += "Application foreground," + appName
                         + "," + appStartTimeStamp + "\n";
             }
             // postDelayed(Runnable r, long delayMillis): causes the Runnable r to be

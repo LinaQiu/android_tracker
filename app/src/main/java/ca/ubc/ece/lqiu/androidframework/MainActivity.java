@@ -1,6 +1,11 @@
 package ca.ubc.ece.lqiu.androidframework;
 
+import android.app.AppOpsManager;
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.Menu;
@@ -73,6 +78,11 @@ public class MainActivity extends AppCompatActivity {
             alarm = new SampleAlarmReceiver();
             alarm.setAlarm(this);
 
+            // Before launch observeStatusService, need to check if permission is enabled or not
+            if (!hasPermissionForSTATS(getApplicationContext())){
+                Intent usageAccessSettingIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                startActivity(usageAccessSettingIntent);
+            }
             // launch android service, using observeScreenStatusService to replace Ahmed's AndroidService
             Intent startBroadcastIntent = new Intent(this, observeScreenStatusService.class);
             startService(startBroadcastIntent);
@@ -233,6 +243,26 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e){
             e.printStackTrace();
         }
+    }
+
+    // To check if we already have PACKAGE_USAGE_STATS permission
+    public static boolean hasPermissionForSTATS(Context context){
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP){
+            try{
+                PackageManager packageManager = context.getPackageManager();
+                ApplicationInfo applicationInfo = packageManager.getApplicationInfo(context.getPackageName(), 0);
+                AppOpsManager appOpsManager = (AppOpsManager) context.getSystemService(Context.APP_OPS_SERVICE);
+                // checkOpNoThrow can only be used at API level 19 and above.
+                int mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,applicationInfo.uid,applicationInfo.packageName);
+                return (mode == AppOpsManager.MODE_ALLOWED);
+            }catch (PackageManager.NameNotFoundException e){
+                return false;
+            }
+        }
+        // If the android API level is below LOLLIPOP, we do not need to use UsageStats to extract the foreground application, thus no need to get PACKAGE_USAGE_STATS.
+        // Then we do not need to check if we have this permission or not, so set the value as true.
+        else
+            return true;
     }
 
 }
