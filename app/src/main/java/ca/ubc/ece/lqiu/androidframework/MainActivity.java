@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     //uploadingCounter used to count how many days the study has been done
     int uploadingCounter = 0;
-    CheckBox checkBox;
+
     //How many days remains for the study
     TextView progressHintTitle;
 

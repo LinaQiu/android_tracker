@@ -45,10 +45,13 @@ public class SampleSchedulingService extends IntentService {
 
                 UploadFilesTask uploaderTask = new UploadFilesTask(
                         getApplicationContext());
+                // TODO(Lina): check what's wrong here.
                 uploaderTask.execute(Installation.id(getApplicationContext()));
 
                 DownloadTask downloaderTask = new DownloadTask(
                         getApplicationContext());
+                
+                // TODO(Lina): check what's wrong here.
                 downloaderTask.execute(Installation.id(getApplicationContext()));
             }
         }

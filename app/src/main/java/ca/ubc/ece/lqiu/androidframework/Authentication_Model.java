@@ -6,20 +6,15 @@ import java.io.IOException;
 
 /**
  * Created by lina on 16-02-22.
- * Modeling authentication attempts in (id, outcome, start time, end time, method type)
+ * Modeling authentication attempts in (outcome, start time, end time, method type)
  * Define data structure, which records authentication_attempts related data
  */
 
 public class Authentication_Model {
 
-    int _id;
     String _outcome;
     String _timeStamp;
     String _method_type;
-
-    public void set_id(int _id) {
-        this._id = _id;
-    }
 
     public void set_outcome(String _outcome) {
         this._outcome = _outcome;
@@ -27,10 +22,6 @@ public class Authentication_Model {
 
     public void set_method_type(String _method_type) {
         this._method_type = _method_type;
-    }
-
-    public String get_timeStamp() {
-        return _timeStamp;
     }
 
     public void set_timeStamp(String _timeStamp) {

@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
@@ -20,7 +19,6 @@ import java.net.MalformedURLException;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.util.Base64;
 
 /**
  * Created by lina on 16-02-22.
@@ -32,10 +30,11 @@ public class Uploader {
     static String AUTHENTICATION_ATTEMPTS_FILE = "";
     static String USER_SESSIONS_FILE = "";
     static String APPLICATION_DIRECTORY_PATH = "";
+    static final int HTTP_OK = 200;
 
     public boolean sendData(String id, String auth, String sess, String fileName){
         String url = "http://study.csnow.ca/SubmitLogFile.aspx";
-        URL serverURL = null;
+        URL serverURL;
         HttpURLConnection urlConnection = null;
         // Define statusCode to record whether the urlConnection is successful or not
         int statusCode=0;
@@ -76,13 +75,13 @@ public class Uploader {
             e.printStackTrace();
         } catch (IOException e){
             e.printStackTrace();
-        }finally {
+        } finally {
             urlConnection.disconnect();
         }
 
         ////??? Not sure whether need to check the response is NULL or not, what Ahmed has done. If yes, do not know how to?////
         // HTTP_OK --> 200
-        return statusCode == 200;
+        return statusCode == HTTP_OK;
     }
 
     // This function is used for constructing an urlParameters from several strings (id, auth, sess, fileName).
@@ -97,10 +96,6 @@ public class Uploader {
             e.printStackTrace();
         }
      return urlParameters;
-    }
-
-    public String encode(String data) {
-        return Base64.encodeToString(data.getBytes(), Base64.DEFAULT);
     }
 
     // Load data from logged data files
@@ -125,18 +120,6 @@ public class Uploader {
         return data;
     }
 
-    public void writeToFile(String filePath, byte[] data) {
-        try {
-            FileOutputStream out = new FileOutputStream(filePath, true);
-            out.write(data);
-            out.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     // Already finished to log data, here is preparation for uploading all logged data to the server
     Boolean prepareFilesToUpload(Context context) {
         APPLICATION_DIRECTORY_PATH = context.getFilesDir() + LOGGING_DIRECTORY;
@@ -155,12 +138,12 @@ public class Uploader {
         for (String fileName : fileList) {
             // Try to find which file we are currently in
             if (!fileName.equals(currentAuthFile)
-                    && fileName.indexOf("auth") != -1) {
+                    && fileName.contains("auth")) {
                 AUTHENTICATION_ATTEMPTS_FILE = "/" + fileName;
             }
 
             if (!fileName.equals(currentSessFile)
-                    && fileName.indexOf("session") != -1) {
+                    && fileName.contains("session")) {
                 USER_SESSIONS_FILE = "/" + fileName;
             }
         }
@@ -170,17 +153,6 @@ public class Uploader {
                 && !USER_SESSIONS_FILE.isEmpty();
     }
 
-    // Check whether WiFi is on or not
-    public Boolean isWifi(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-
-        boolean isWifiOn = activeNetwork != null
-                && (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI);
-        return isWifiOn;
-    }
 
     // Check whether has network connection or not
     public Boolean isConnectionFound(Context context) {

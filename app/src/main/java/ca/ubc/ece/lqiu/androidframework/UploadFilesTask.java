@@ -2,15 +2,10 @@ package ca.ubc.ece.lqiu.androidframework;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Locale;
 
 import android.content.Context;
 import android.os.AsyncTask;
@@ -18,11 +13,12 @@ import android.os.Environment;
 
 /**
  * Created by lina on 16-02-22.
+ * AsyncTask enables proper and easy use of the UI thread. This class allows to perform
+ * background operations and publish results on the UI thread without having to manipulate
+ * threads and/or handlers.
  */
 
-// AsyncTask enables proper and easy use of the UI thread. This class allows to perform
-// background operations and publish results on the UI thread without having to manipulate
-// threads and/or handlers.
+
 public class UploadFilesTask extends AsyncTask<String, Void, Void> {
 
     static final String LOGGING_DIRECTORY = "/android_logged_data";
@@ -127,8 +123,6 @@ public class UploadFilesTask extends AsyncTask<String, Void, Void> {
                     + "/rsa.pub");
             cipher += Crypto.encrypt(key, plain.getBytes());
 
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -149,8 +143,6 @@ public class UploadFilesTask extends AsyncTask<String, Void, Void> {
             // default charset, storing the result into a new byte array.
             out.write(data.getBytes());
             out.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

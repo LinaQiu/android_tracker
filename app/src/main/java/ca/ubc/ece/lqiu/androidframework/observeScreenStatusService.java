@@ -12,6 +12,7 @@ import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
@@ -53,6 +54,10 @@ public class observeScreenStatusService extends Service{
     // appName stores currently/previously running foreground app name
     String appName = "";
 
+    // _outcome, _timeStamp and _method_type are used to store the parameters for function logging_auth_model_Data(Authentication_Model _auth_model, String _outcome, String _timeStamp, String _method_type, String filePath)
+    String _outcome = null;
+    String _timeStamp = null;
+    String _method_type = null;
     String locked = "NA";
     private Authentication_Model _auth_model;
 
@@ -113,15 +118,14 @@ public class observeScreenStatusService extends Service{
             // auth_attempt intent
             if (intent.getStringExtra("passFailed") != null) {
                 // get record of data (outcome, time stamp, authentication method)
-                String passFailed = intent.getStringExtra("passFailed");
+                _outcome = intent.getStringExtra("passFailed");
 
                 // update and logging data
-                _auth_model.set_outcome(passFailed);
-                _auth_model.set_timeStamp(new SimpleDateFormat(
+                _timeStamp = new SimpleDateFormat(
                         "yyyy-MM-dd 'T' hh:mm:ss.SSS a", Locale.US).format(Calendar
-                        .getInstance().getTime()));
-                _auth_model.set_method_type(getAuthenticationMethodType());
-                _auth_model.logging_data(APPLICATION_DIRECTORY_PATH
+                        .getInstance().getTime());
+                _method_type = getAuthenticationMethodType();
+                logging_auth_model_Data(_auth_model, _outcome, _timeStamp, _method_type, APPLICATION_DIRECTORY_PATH
                         + AUTHENTICATION_ATTEMPTS_FILE);
             } else {
                 // get all status from screen receiver (screen on, off or user present)
@@ -131,33 +135,33 @@ public class observeScreenStatusService extends Service{
                 // screen switched on and user going to unlock device
                 if (screenOn && !user_present) {
 
-                    _auth_model.set_outcome("Screen On");
-                    _auth_model.set_timeStamp(new SimpleDateFormat(
+                    _outcome = "Screen On";
+                    _timeStamp = new SimpleDateFormat(
                             "yyyy-MM-dd 'T' hh:mm:ss.SSS a", Locale.US).format(Calendar
-                            .getInstance().getTime()));
+                            .getInstance().getTime());
                     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
                         locked = ((KeyguardManager)getSystemService(KEYGUARD_SERVICE)).isKeyguardLocked()? "true" : "false";
                     }
-                    _auth_model.set_method_type(locked);
-                    _auth_model.logging_data(APPLICATION_DIRECTORY_PATH
+                    _method_type = locked;
+                    logging_auth_model_Data(_auth_model, _outcome, _timeStamp, _method_type, APPLICATION_DIRECTORY_PATH
                             + AUTHENTICATION_ATTEMPTS_FILE);
                 }
 
                 /*Do not understand very clearly. Need to read again.*/
                 // screen switched off
                 if (!screenOn) {
-                    _auth_model.set_outcome("Screen Off");
-                    _auth_model.set_timeStamp(new SimpleDateFormat(
+                    _outcome = "Screen Off";
+                    _timeStamp = new SimpleDateFormat(
                             "yyyy-MM-dd 'T' hh:mm:ss.SSS a", Locale.US).format(Calendar
-                            .getInstance().getTime()));
+                            .getInstance().getTime());
 
 
                     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
                         locked = ((KeyguardManager)getSystemService(KEYGUARD_SERVICE)).isKeyguardLocked()? "true" : "false";
                     }
                     int screen_off_time_out = Settings.Secure.getInt(getContentResolver(), "lock_screen_lock_after_timeout", 0);
-                    _auth_model.set_method_type( locked + "," + screen_off_time_out);
-                    _auth_model.logging_data(APPLICATION_DIRECTORY_PATH
+                    _method_type= locked + "," + screen_off_time_out;
+                    logging_auth_model_Data(_auth_model, _outcome, _timeStamp, _method_type, APPLICATION_DIRECTORY_PATH
                             + AUTHENTICATION_ATTEMPTS_FILE);
                 }
 
@@ -166,25 +170,27 @@ public class observeScreenStatusService extends Service{
 
                     user_present_timestamp = intent.getLongExtra(
                             "user_present_timestamp", 0);
+
+
+                    // successful authentication happened
+                    _outcome = "Successful";
+                    // The start _timeStamp of this session
                     String session_start_time = new SimpleDateFormat(
                             "yyyy-MM-dd 'T' hh:mm:ss.SSS a", Locale.US).format(Calendar
                             .getInstance().getTime());
-
-                    // successful authentication happened
-                    _auth_model.set_outcome("Successful");
-                    _auth_model.set_timeStamp(session_start_time);
-                    _auth_model.set_method_type(getAuthenticationMethodType());
-                    _auth_model.logging_data(APPLICATION_DIRECTORY_PATH
+                    _method_type = getAuthenticationMethodType();
+                    logging_auth_model_Data(_auth_model, _outcome, session_start_time, _method_type, APPLICATION_DIRECTORY_PATH
                             + AUTHENTICATION_ATTEMPTS_FILE);
 
                     // logging session's start time stamp
-                    logging_data(APPLICATION_DIRECTORY_PATH + USER_SESSIONS_FILE,
-                            "Session start,," + session_start_time + ","
-                                    + getAuthenticationMethodType() + "\n");
+                    logging_sess_data("Session start,," + session_start_time + "," + _method_type + "\n", APPLICATION_DIRECTORY_PATH
+                            + USER_SESSIONS_FILE);
 
                     // To direct the user to the settings page, in order to get user authorization to request the stats.
-                    Intent usageAccessSettingsIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
-                    startActivity(usageAccessSettingsIntent);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP){
+                        Intent usageAccessSettingsIntent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                        startActivity(usageAccessSettingsIntent);
+                    }
 
                     // start foreground application observer thread
                     appName = "";
@@ -198,18 +204,19 @@ public class observeScreenStatusService extends Service{
                 if (!screenOn && !user_present && user_present_timestamp != 0) {
                     user_present_timestamp = 0;
                     // Logging foreground running apps
-                    logging_data(APPLICATION_DIRECTORY_PATH + USER_SESSIONS_FILE,
-                            foregroundRunningApps);
+                    logging_sess_data(foregroundRunningApps, APPLICATION_DIRECTORY_PATH
+                            + USER_SESSIONS_FILE);
+
                     // Because screen has been locked, we need to remove all post runnables
                     mForegroundHandler.removeCallbacks(mCheckForegroundRunnable);
 
                     // Record session_end_time here
-                    String session_end_time = new SimpleDateFormat(
+                    String session_end_time  = new SimpleDateFormat(
                             "yyyy-MM-dd 'T' hh:mm:ss.SSS a", Locale.US).format(Calendar
                             .getInstance().getTime());
                     // logging session's end time stamp
-                    logging_data(APPLICATION_DIRECTORY_PATH + USER_SESSIONS_FILE,
-                            "Session end,," + session_end_time + "\n");
+                    logging_sess_data("Session end,," + session_end_time + "\n", APPLICATION_DIRECTORY_PATH
+                            + USER_SESSIONS_FILE);
                 }
             }
         }
@@ -250,13 +257,14 @@ public class observeScreenStatusService extends Service{
     }
 
     /*
-     * Logging data in specified path
+     * Logging session data in specified path
+     *
+     * @param data that will be logged in the file
      *
      * @param filepath path of the file that stores logged data
      *
-     * @param data that will be logged in the file
      */
-    private void logging_data(String filePath, String data) {
+    private void logging_sess_data(String data, String filePath) {
         try {
             FileOutputStream out = new FileOutputStream(filePath, true);
 /////////////////////////////////////////////////////////////////////////////////////
@@ -270,6 +278,26 @@ public class observeScreenStatusService extends Service{
         }
     }
 
+    /*
+    * Logging authentication data in specified path
+    *
+    * @param _auth_model a specific Authentication_Model data structure
+    *
+    * @param _outcome outcome of unlocking/screenStatus
+    *
+    * @param _timeStamp currently time stamp
+    *
+    * @param _method_type unlocking method / whether Keyguard is removed or not
+    *
+    * @param filepath path of the file that stores logged data
+    *
+    */
+    private void logging_auth_model_Data(Authentication_Model _auth_model, String _outcome, String _timeStamp, String _method_type, String filePath){
+        _auth_model.set_outcome(_outcome);
+        _auth_model.set_timeStamp(_timeStamp);
+        _auth_model.set_method_type(_method_type);
+        _auth_model.logging_data(filePath);
+    }
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
@@ -282,7 +310,7 @@ public class observeScreenStatusService extends Service{
         // Issues met:
         // Someone suggested to use getAppRunningProcess(), but this no longer work with Update 5.1.1. The method will only return your own package processes.
         // Someone suggested to use UsageStatsManager, but it will need user authorization to request the stats. It is documented that there may not be a system
-        // activity to handle the Settings.ACTION_USAGE_ACCESS_SETTINGS intent. Samsung and LG are among the manufacturers who have removed this activity from their
+        // activity to handle the Settings.ACTION_USAGE_ACCESS_SETTINGS intent. LG are among the manufacturers who have removed this activity from their
         // Lollipop builds, so this solution will never work on their devices.
         // Another solution: Use an AccessibilityService. to be discussed.
         // getRunningTasks(int maxNum): return a list of the tasks that are currently running,
@@ -291,12 +319,15 @@ public class observeScreenStatusService extends Service{
         String appName = "";
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            UsageStatsManager usm = (UsageStatsManager) getSystemService("usagestats");
+            // USAGE_STATS_SERVICE is added in API level 22, not 21. Seems a GAP in API level 21.
+            UsageStatsManager usm = (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
             long time = System.currentTimeMillis();
-            List<UsageStats> appList = usm.queryUsageStats(UsageStatsManager.INTERVAL_DAILY,
+            List<UsageStats> appList = usm.queryUsageStats(UsageStatsManager.INTERVAL_BEST,
                     time - 1000 * 1000, time);
             if (appList != null && appList.size() > 0) {
                 SortedMap<Long, UsageStats> mySortedMap = new TreeMap<Long, UsageStats>();
+
+                // Sort all applications used in last 1000s by the time they were last used
                 for (UsageStats usageStats : appList) {
                     mySortedMap.put(usageStats.getLastTimeUsed(),
                             usageStats);
@@ -307,6 +338,7 @@ public class observeScreenStatusService extends Service{
                 }
             }
         } else {
+            // getRunningAppProcesses() is deprecated in API level 21
             ActivityManager taskManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
             List<ActivityManager.RunningAppProcessInfo> tasks = taskManager.getRunningAppProcesses();
             appName = tasks.get(0).processName;
@@ -330,11 +362,11 @@ public class observeScreenStatusService extends Service{
             // then record the appEndTimeStamp for previous foreground app.
             // It is possible that there is no previous foreground app, which is
             // corresponding to appName="" situation.
-            if (getForegroundAppName() != appName) {
+            if (getForegroundAppName().equals(appName)) {
                 appEndTimeStamp = new SimpleDateFormat(
                         "yyyy-MM-dd 'T' hh:mm:ss.SSS a", Locale.US).format(Calendar
                         .getInstance().getTime());
-                if (appName != "") {
+                if (appName.equals("")) {
                     foregroundRunningApps += "Application background,"
                             + appName + "," + appEndTimeStamp + "\n";
                 }
@@ -362,6 +394,7 @@ public class observeScreenStatusService extends Service{
         AUTHENTICATION_ATTEMPTS_FILE = "/auth-" + currentDay + ".txt";
         USER_SESSIONS_FILE = "/session-" + currentDay + ".txt";
     }
+
 }
 
 
